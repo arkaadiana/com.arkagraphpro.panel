@@ -14,13 +14,13 @@
         const wrap = document.getElementById('header-secure-wrap');
         if (!wrap) return;
 
-        const signature = 'ARKAGRAPH-V2';
+        const signature = 'ARKAGRAPH-V3';
         
         wrap.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <div>
                     <div id="logo" data-sig="${signature}">ARKA<span>GRAPH</span></div>
-                    <div id="version">V2.0.2 // MOTION ARCHITECTURE</div>
+                    <div id="version">V3.0.0 // MOTION ARCHITECTURE</div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
                     <div onclick="window.AG.openExternalLink('https://www.instagram.com/4rrka/')" style="cursor: pointer; pointer-events: auto; display: flex; align-items: center; gap: 6px; color: #888; font-size: 10px; font-family: 'JetBrains Mono', monospace; transition: color 0.2s;" onmouseover="this.style.color='#00c4a7'" onmouseout="this.style.color='#888'">
