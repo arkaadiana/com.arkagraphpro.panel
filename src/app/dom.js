@@ -7,6 +7,13 @@
         canvasBackground: document.getElementById('graph-bg-layer'),
         canvasBackgroundGradient: document.getElementById('graph-bg-gradient'),
         canvasCoords: document.getElementById('canvas-coords'),
+        mainViewTabs: document.querySelectorAll('.main-view-tab'),
+        graphView: document.getElementById('view-graph-container'),
+        textView: document.getElementById('view-text-container'),
+        textAnimModeButtons: document.querySelectorAll('#text-anim-mode .seg-btn'),
+        textPresetGrid: document.getElementById('text-presets-grid'),
+        applyTextButton: document.getElementById('btn-apply-text'),
+        clearTextButton: document.getElementById('btn-clear-text'),
         mirrorButton: document.getElementById('btn-mirror-graph'),
         settingsButton: document.getElementById('btn-open-settings'),
         presetGrid: document.getElementById('presets-grid'),
@@ -50,7 +57,9 @@
         settingsBackgroundGallery: document.getElementById('settings-bg-gallery'),
         settingsBackgroundMessage: document.getElementById('settings-bg-message'),
         settingsThemeGrid: document.getElementById('settings-theme-grid'),
-        settingsAccentGrid: document.getElementById('settings-accent-grid')
+        settingsAccentGrid: document.getElementById('settings-accent-grid'),
+        textSearchInput: document.getElementById('text-search-input'),
+        textCategoryTabs: document.querySelectorAll('.cat-btn'),
     };
     AG.ctx = AG.dom.canvas.getContext('2d');
 })();

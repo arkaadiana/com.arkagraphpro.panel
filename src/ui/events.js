@@ -2,7 +2,423 @@
     'use strict';
     const AG = window.AG;
 
+    let currentTextCategory = 'all';
+    let currentTextSearch = '';
+    let textFavorites = [];
+
+    try {
+        textFavorites = JSON.parse(localStorage.getItem('AG_TextFavs') || '[]');
+    } catch(e) {}
+
+    let directionState = {};
+
+    try {
+        directionState = JSON.parse(localStorage.getItem('AG_TextDirs') || '{}');
+    } catch(e) {}
+
+    function getDirection(presetId, defaultDir) {
+        return directionState[presetId] || defaultDir || 'up';
+    }
+
+    function setDirection(presetId, dir) {
+        directionState[presetId] = dir;
+        try {
+            localStorage.setItem('AG_TextDirs', JSON.stringify(directionState));
+        } catch(e) {}
+    }
+
+    let directionPicker = null;
+
+    function buildDirectionPicker() {
+        if (directionPicker) return;
+
+        directionPicker = document.createElement('div');
+        directionPicker.className = 'ag-dir-picker';
+        directionPicker.innerHTML =
+            '<button class="ag-dir-btn" data-dir="up"    title="From below">↑</button>' +
+            '<button class="ag-dir-btn" data-dir="down"  title="From above">↓</button>' +
+            '<button class="ag-dir-btn" data-dir="left"  title="From right">←</button>' +
+            '<button class="ag-dir-btn" data-dir="right" title="From left">→</button>';
+
+        directionPicker.addEventListener('click', function(e) {
+            const btn = e.target.closest('.ag-dir-btn');
+            if (!btn) return;
+            e.stopPropagation();
+
+            const dir = btn.dataset.dir;
+            const presetId = AG.state.selectedTextPresetId;
+            if (!presetId) return;
+
+            setDirection(presetId, dir);
+            updateDirectionPickerState(presetId);
+            updatePreview(presetId, dir);
+        });
+    }
+
+    function updateDirectionPickerState(presetId) {
+        if (!directionPicker) return;
+        const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
+        if (!preset) return;
+        const current = getDirection(presetId, preset.defaultDirection);
+        directionPicker.querySelectorAll('.ag-dir-btn').forEach(function(btn) {
+            btn.classList.toggle('active', btn.dataset.dir === current);
+        });
+    }
+
+    function attachDirectionPicker(cardEl, presetId) {
+        if (!directionPicker) buildDirectionPicker();
+
+        if (directionPicker.parentElement) {
+            directionPicker.parentElement.removeChild(directionPicker);
+        }
+
+        cardEl.appendChild(directionPicker);
+        updateDirectionPickerState(presetId);
+    }
+
+    function injectDirectionStyles() {
+        if (document.getElementById('ag-dir-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'ag-dir-styles';
+        style.textContent = [
+            '.ag-dir-picker {',
+            '  display: flex;',
+            '  gap: 4px;',
+            '  margin-top: 8px;',
+            '  padding-top: 8px;',
+            '  border-top: 1px solid var(--border2, rgba(255,255,255,0.08));',
+            '}',
+            '.ag-dir-btn {',
+            '  flex: 1;',
+            '  height: 26px;',
+            '  background: var(--bg1, rgba(255,255,255,0.04));',
+            '  border: 1px solid var(--border1, rgba(255,255,255,0.1));',
+            '  border-radius: 4px;',
+            '  color: var(--text2, #888);',
+            '  font-size: 13px;',
+            '  line-height: 1;',
+            '  cursor: pointer;',
+            '  transition: background 0.15s, color 0.15s, border-color 0.15s;',
+            '}',
+            '.ag-dir-btn:hover {',
+            '  background: var(--bg2, rgba(255,255,255,0.08));',
+            '  color: var(--text0, #fff);',
+            '}',
+            '.ag-dir-btn.active {',
+            '  background: var(--accent, #5b6cf0);',
+            '  border-color: var(--accent, #5b6cf0);',
+            '  color: #fff;',
+            '}'
+        ].join('\n');
+        document.head.appendChild(style);
+    }
+
+    function updatePreview(presetId, direction) {
+        const previewRender = document.getElementById('text-preview-render');
+        if (!previewRender) return;
+
+        const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
+        let className = 'animate-' + presetId;
+
+        if (preset && preset.directional && direction) {
+            className += ' dir-' + direction;
+        }
+
+        previewRender.className = '';
+        previewRender.querySelectorAll('span').forEach(function(span) { span.className = ''; });
+
+        void previewRender.offsetWidth;
+        previewRender.className = className;
+
+        syncPreviewDirectionCSS(presetId, direction);
+    }
+
+    /**
+     * DYNAMIC CSS KEYFRAME GENERATOR
+     * Membuat ulang animasi CSS untuk arah tertentu secara akurat berdasarkan properties preset 
+     * (Scale, Rotation, dan Easing curve).
+     */
+    function syncPreviewDirectionCSS(presetId, direction) {
+        const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
+        if (!preset || !preset.directional) {
+            clearPreviewDirectionCSS();
+            return;
+        }
+
+        const anim = preset.animator;
+        if (!Array.isArray(anim.position)) { clearPreviewDirectionCSS(); return; }
+
+        const defaultDir = preset.defaultDirection || 'up';
+        
+        // 1. Hitung base X dan Y berdasarkan logika bridge AE
+        let primaryMag = 0, secondaryMag = 0;
+        const isDefaultVertical = (defaultDir === 'up' || defaultDir === 'down');
+        
+        if (isDefaultVertical) {
+            primaryMag = Math.abs(anim.position[1]) || 85;
+            secondaryMag = anim.position[0] || 0;
+        } else {
+            primaryMag = Math.abs(anim.position[0]) || 150;
+            secondaryMag = anim.position[1] || 0;
+        }
+
+        const isTargetVertical = (direction === 'up' || direction === 'down');
+        let newX = 0, newY = 0;
+        
+        if (isTargetVertical) {
+            newY = (direction === 'up') ? primaryMag : -primaryMag;
+            newX = secondaryMag;
+        } else {
+            newX = (direction === 'left') ? primaryMag : -primaryMag;
+            newY = secondaryMag;
+        }
+
+        // Scale down unit AE ke CSS px (dikali 0.35)
+        const pxX = Math.round(newX * 0.35);
+        const pxY = Math.round(newY * 0.35);
+        const translateStr = `translate(${pxX}px, ${pxY}px)`;
+
+        // 2. Sertakan Scale awal
+        let scaleStr = '';
+        if (Array.isArray(anim.scale) && (anim.scale[0] !== 100 || anim.scale[1] !== 100)) {
+            scaleStr = ` scale(${anim.scale[0] / 100}, ${anim.scale[1] / 100})`;
+        }
+
+        // 3. Sertakan Rotasi (dan Mirror/Flip jika perlu)
+        let rotateStr = '';
+        if (typeof anim.rotation !== 'undefined') {
+            const defaultIsNegative = (defaultDir === 'down' || defaultDir === 'right');
+            const targetIsNegative = (direction === 'down' || direction === 'right');
+            const needsFlip = (defaultIsNegative !== targetIsNegative);
+            const r = needsFlip ? -anim.rotation : anim.rotation;
+            rotateStr = ` rotate(${r}deg)`;
+        }
+
+        const fromTransform = translateStr + scaleStr + rotateStr;
+        const toTransform   = `translate(0, 0) scale(1) rotate(0deg)`;
+
+        // 4. Pilih kurva timing (Easing) yang benar agar 'Slide Fade' tidak ikut bounce
+        let easeIn  = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // Default Bounce In
+        let easeOut = 'cubic-bezier(0.6, -0.8, 0.73, 0.04)'; // Default Bounce Out
+
+        if (preset.category === 'clean') {
+            easeIn  = 'cubic-bezier(0.16, 1, 0.3, 1)'; // Smooth Clean In
+            easeOut = 'cubic-bezier(0.7, 0, 0.84, 0)'; // Smooth Clean Out
+        } else if (presetId === 'shinobiStrike') {
+            easeIn  = 'cubic-bezier(0.1, 1, 0.2, 1)';
+            easeOut = 'cubic-bezier(0.7, -0.5, 0.9, 0)';
+        } else if (presetId === 'swingingRotate') {
+            easeOut = 'cubic-bezier(0.36, -0.56, 0.66, -0.01)'; // Kurva ayunan sedikit beda
+        }
+
+        const animClass  = '.animate-' + presetId + '.dir-' + direction;
+        const keyframeId = 'agDirPreview_' + presetId + '_' + direction;
+
+        const css = [
+            `@keyframes ${keyframeId} {`,
+            `  0%   { transform: ${fromTransform}; opacity: 0; animation-timing-function: ${easeIn}; }`,
+            `  20%  { transform: ${toTransform}; opacity: 1; }`,
+            `  80%  { transform: ${toTransform}; opacity: 1; animation-timing-function: ${easeOut}; }`,
+            `  100% { transform: ${fromTransform}; opacity: 0; }`,
+            `}`,
+            `${animClass} span {`,
+            `  animation-name: ${keyframeId} !important;`,
+            `}`
+        ].join('\n');
+
+        let el = document.getElementById('ag-dir-preview-css');
+        if (!el) {
+            el = document.createElement('style');
+            el.id = 'ag-dir-preview-css';
+            document.head.appendChild(el);
+        }
+        el.textContent = css;
+    }
+
+    function clearPreviewDirectionCSS() {
+        const el = document.getElementById('ag-dir-preview-css');
+        if (el) el.textContent = '';
+    }
+
+    function toggleFavorite(presetId, event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (textFavorites.includes(presetId)) {
+            textFavorites = textFavorites.filter(function(id) { return id !== presetId; });
+        } else {
+            textFavorites.push(presetId);
+        }
+        localStorage.setItem('AG_TextFavs', JSON.stringify(textFavorites));
+        renderTextPresetCards();
+    }
+
+    function setMainView(view) {
+        AG.state.activeView = view;
+        AG.dom.graphView.classList.toggle('hidden', view !== 'graph');
+        AG.dom.textView.classList.toggle('hidden', view !== 'text');
+        AG.dom.mainViewTabs.forEach(function (tab) {
+            tab.classList.toggle('active', tab.dataset.view === view);
+        });
+        if (view === 'graph') AG.resizeCanvas();
+    }
+
+    function setTextAnimMode(mode) {
+        AG.state.textAnimMode = mode;
+        AG.dom.textAnimModeButtons.forEach(function (button) {
+            button.classList.toggle('active', button.dataset.textMode === mode);
+        });
+    }
+
+    function selectTextPreset(presetId) {
+        AG.state.selectedTextPresetId = presetId;
+
+        const cards = AG.dom.textPresetGrid.querySelectorAll('.preset-card');
+        if (cards) {
+            cards.forEach(function (card) {
+                card.classList.toggle('active', card.dataset.presetId === presetId);
+            });
+        }
+
+        const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
+
+        if (preset && preset.directional) {
+            const activeCard = AG.dom.textPresetGrid.querySelector('.preset-card[data-preset-id="' + presetId + '"]');
+            if (activeCard) {
+                attachDirectionPicker(activeCard, presetId);
+            }
+        } else {
+            if (directionPicker && directionPicker.parentElement) {
+                directionPicker.parentElement.removeChild(directionPicker);
+            }
+        }
+
+        const dir = (preset && preset.directional) ? getDirection(presetId, preset.defaultDirection) : null;
+        updatePreview(presetId, dir);
+    }
+
+    function createTextPresetCard(preset) {
+        const card      = document.createElement('div');
+        const topline   = document.createElement('div');
+        const title     = document.createElement('span');
+        const icon      = document.createElement('span');
+        const hint      = document.createElement('span');
+        const specs     = document.createElement('div');
+        const duration  = document.createElement('span');
+        const shape     = document.createElement('span');
+        const favBtn    = document.createElement('button');
+
+        card.className = 'preset-card';
+        card.dataset.presetId = preset.id;
+        if (AG.state.selectedTextPresetId === preset.id) card.classList.add('active');
+
+        favBtn.className = 'preset-fav-btn' + (textFavorites.includes(preset.id) ? ' is-fav' : '');
+        favBtn.innerHTML = textFavorites.includes(preset.id) ? '★' : '☆';
+        favBtn.onclick = function(e) { toggleFavorite(preset.id, e); };
+
+        topline.className = 'text-preset-topline';
+
+        title.className = 'text-preset-title';
+        title.textContent = preset.label || preset.name;
+        title.style.color = 'var(--text0)';
+
+        icon.className = 'text-preset-icon';
+        if (preset.directional) {
+            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l0 20M2 12l10-10 10 10"/></svg>';
+            icon.title = 'Directional preset';
+        } else {
+            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>';
+        }
+        icon.style.color = 'var(--accent)';
+
+        hint.className = 'text-preset-hint';
+        hint.textContent = preset.hint || 'Text animator preset';
+        hint.style.fontSize = '9px';
+        hint.style.color = 'var(--text2)';
+        hint.style.display = 'block';
+        hint.style.marginTop = '4px';
+
+        specs.className = 'text-preset-specs';
+        specs.style.marginTop = '8px';
+
+        duration.className = 'text-preset-chip';
+        duration.textContent = (preset.duration || 1) + 's';
+        duration.style.cssText = 'font-size:8px;padding:2px 4px;background:var(--bg1);border-radius:3px;color:var(--text1);';
+
+        shape.className = 'text-preset-chip';
+        shape.textContent = 'SHAPE ' + (preset.advanced && preset.advanced.shape ? preset.advanced.shape : 2);
+        shape.style.cssText = 'font-size:8px;padding:2px 4px;background:var(--bg1);border-radius:3px;color:var(--text1);margin-left:4px;';
+
+        topline.style.cssText = 'display:flex;justify-content:space-between;';
+        topline.appendChild(title);
+        topline.appendChild(icon);
+        specs.appendChild(duration);
+        specs.appendChild(shape);
+
+        card.appendChild(favBtn);
+        card.appendChild(topline);
+        card.appendChild(hint);
+        card.appendChild(specs);
+
+        card.addEventListener('click', function () {
+            selectTextPreset(preset.id);
+        });
+
+        return card;
+    }
+
+    function renderTextPresetCards() {
+        if (directionPicker && directionPicker.parentElement) {
+            directionPicker.parentElement.removeChild(directionPicker);
+        }
+
+        AG.dom.textPresetGrid.innerHTML = '';
+        const presets = window.TEXT_PRESETS || {};
+
+        for (const key in presets) {
+            const preset = presets[key];
+
+            if (currentTextCategory === 'fav' && !textFavorites.includes(preset.id)) continue;
+            if (currentTextCategory !== 'all' && currentTextCategory !== 'fav' && preset.category !== currentTextCategory) continue;
+
+            if (currentTextSearch !== '') {
+                const s = currentTextSearch.toLowerCase();
+                if (!preset.name.toLowerCase().includes(s) && !(preset.hint || '').toLowerCase().includes(s)) continue;
+            }
+
+            const card = createTextPresetCard(preset);
+            AG.dom.textPresetGrid.appendChild(card);
+        }
+
+        const activeId = AG.state.selectedTextPresetId;
+        if (activeId) {
+            const activePreset = window.TEXT_PRESETS && window.TEXT_PRESETS[activeId];
+            if (activePreset && activePreset.directional) {
+                const activeCard = AG.dom.textPresetGrid.querySelector('.preset-card[data-preset-id="' + activeId + '"]');
+                if (activeCard) attachDirectionPicker(activeCard, activeId);
+            }
+        }
+    }
+
+    function handleApplyText() {
+        const presetId = AG.state.selectedTextPresetId;
+        const preset   = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
+        const dir      = (preset && preset.directional)
+            ? getDirection(presetId, preset.defaultDirection)
+            : null;
+
+        AG.applyTextAnimation(presetId, AG.state.textAnimMode, dir);
+    }
+
     function bindUiEvents() {
+        injectDirectionStyles();
+        buildDirectionPicker();
+
+        AG.dom.mainViewTabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                setMainView(tab.dataset.view);
+            });
+        });
+
         document.querySelectorAll('.eng-tab').forEach(function (tab) {
             tab.addEventListener('click', function () {
                 AG.setEngine(tab.dataset.engine);
@@ -21,6 +437,18 @@
                 AG.draw();
             });
         });
+
+        AG.dom.textAnimModeButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                setTextAnimMode(button.dataset.textMode);
+            });
+        });
+
+        AG.dom.applyTextButton.addEventListener('click', handleApplyText);
+
+        if (AG.dom.clearTextButton) {
+            AG.dom.clearTextButton.addEventListener('click', AG.clearTextAnimations);
+        }
 
         AG.dom.applyButton.addEventListener('click', AG.applyToSelected);
         AG.dom.bakeButton.addEventListener('click', AG.bakeKeys);
@@ -43,7 +471,7 @@
 
         [AG.dom.loopInCount, AG.dom.loopOutCount].forEach(function (input) {
             function sync() {
-                AG.state.loop.inCount = AG.clampLoopCount(AG.dom.loopInCount.value);
+                AG.state.loop.inCount  = AG.clampLoopCount(AG.dom.loopInCount.value);
                 AG.state.loop.outCount = AG.clampLoopCount(AG.dom.loopOutCount.value);
                 AG.syncLoopInputs();
                 AG.refreshApplyButton();
@@ -51,6 +479,60 @@
             input.addEventListener('input', sync);
             input.addEventListener('change', sync);
         });
+
+        if (AG.dom.textSearchInput) {
+            AG.dom.textSearchInput.addEventListener('input', function(e) {
+                currentTextSearch = e.target.value;
+                renderTextPresetCards();
+            });
+        }
+
+        if (AG.dom.textCategoryTabs) {
+            AG.dom.textCategoryTabs.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    AG.dom.textCategoryTabs.forEach(function(b) { b.classList.remove('active'); });
+                    e.target.classList.add('active');
+                    currentTextCategory = e.target.dataset.cat;
+                    renderTextPresetCards();
+                });
+            });
+        }
+
+        renderTextPresetCards();
+        setTextAnimMode(AG.state.textAnimMode);
+        setMainView(AG.state.activeView);
+
+        const initId = AG.state.selectedTextPresetId;
+        if (initId) {
+            const initPreset = window.TEXT_PRESETS && window.TEXT_PRESETS[initId];
+            const initDir = (initPreset && initPreset.directional)
+                ? getDirection(initId, initPreset.defaultDirection)
+                : null;
+            updatePreview(initId, initDir);
+            if (initPreset && initPreset.directional) {
+                const initCard = AG.dom.textPresetGrid.querySelector('.preset-card[data-preset-id="' + initId + '"]');
+                if (initCard) attachDirectionPicker(initCard, initId);
+            }
+        }
+
+        const graphBg   = document.getElementById('graph-bg-layer');
+        const graphGrad = document.getElementById('graph-bg-gradient');
+        const textBg    = document.getElementById('text-bg-layer');
+        const textGrad  = document.getElementById('text-bg-gradient');
+
+        if (graphBg && textBg) {
+            textBg.style.backgroundImage = graphBg.style.backgroundImage;
+            textBg.className = graphBg.className;
+            if (graphGrad && textGrad) textGrad.className = graphGrad.className;
+
+            new MutationObserver(function(mutations) {
+                mutations.forEach(function() {
+                    textBg.style.backgroundImage = graphBg.style.backgroundImage;
+                    textBg.className = graphBg.className;
+                    if (graphGrad && textGrad) textGrad.className = graphGrad.className;
+                });
+            }).observe(graphBg, { attributes: true, attributeFilter: ['style', 'class'] });
+        }
     }
 
     AG.bindUiEvents = bindUiEvents;

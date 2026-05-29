@@ -7,6 +7,8 @@
         applyExpression: 'arkaGraphApplyExpression',
         clearExpression: 'arkaGraphClearExpression',
         getFPS: 'arkaGraphGetFPS',
-        bakeKeys: 'arkaGraphBakeKeys'
+        bakeKeys: 'arkaGraphBakeKeys',
+        applyTextAnimation: 'arkaGraphApplyTextAnimation',
+        clearTextAnimations: 'arkaGraphClearTextAnimations'
     };
 })();

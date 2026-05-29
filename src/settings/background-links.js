@@ -22,13 +22,13 @@
         {
             id: 'anime-goku-1',
             name: 'Goku',
-            type: 'image',
+            type: 'gif',
             url: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXY1NmZoajFhMXpzZTBwOXRwc3pxOGhtZXE2eTh1aTNpbXdhbDdhYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/osm7o1nCvv7pR7AyGO/giphy.gif'
         },
         {
             id: 'anime-fern-1',
             name: 'Fern Kururing',
-            type: 'image',
+            type: 'gif',
             url: 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc2pwZmd6Zzc3aHQxbzVxMWF1eGh5ZWE3bG5tZ2RyMXdtdnl1OXlzdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QtZSl6mcqfmvCBI2cb/giphy.gif'
         }
     ];
