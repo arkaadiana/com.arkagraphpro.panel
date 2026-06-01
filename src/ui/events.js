@@ -4,6 +4,7 @@
 
     let currentTextCategory = 'all';
     let currentTextSearch = '';
+    let currentEffectSearch = '';
     let textFavorites = [];
 
     try {
@@ -114,7 +115,10 @@
     }
 
     function updatePreview(presetId, direction) {
-        const previewRender = document.getElementById('text-preview-render');
+        AG.dom.textVideoPreview.classList.add('hidden');
+        AG.dom.textPreviewRender.classList.remove('hidden');
+
+        const previewRender = AG.dom.textPreviewRender;
         if (!previewRender) return;
 
         const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
@@ -133,11 +137,14 @@
         syncPreviewDirectionCSS(presetId, direction);
     }
 
-    /**
-     * DYNAMIC CSS KEYFRAME GENERATOR
-     * Membuat ulang animasi CSS untuk arah tertentu secara akurat berdasarkan properties preset 
-     * (Scale, Rotation, dan Easing curve).
-     */
+    function updateEffectPreview(effectId) {
+        AG.dom.textPreviewRender.classList.add('hidden');
+        AG.dom.textVideoPreview.classList.remove('hidden');
+        AG.dom.textVideoPreview.src = 'assets/previews/' + effectId + '.webm';
+        AG.dom.textVideoPreview.load();
+        AG.dom.textVideoPreview.play().catch(function(){});
+    }
+
     function syncPreviewDirectionCSS(presetId, direction) {
         const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
         if (!preset || !preset.directional) {
@@ -150,7 +157,6 @@
 
         const defaultDir = preset.defaultDirection || 'up';
         
-        // 1. Hitung base X dan Y berdasarkan logika bridge AE
         let primaryMag = 0, secondaryMag = 0;
         const isDefaultVertical = (defaultDir === 'up' || defaultDir === 'down');
         
@@ -173,18 +179,15 @@
             newY = secondaryMag;
         }
 
-        // Scale down unit AE ke CSS px (dikali 0.35)
         const pxX = Math.round(newX * 0.35);
         const pxY = Math.round(newY * 0.35);
         const translateStr = `translate(${pxX}px, ${pxY}px)`;
 
-        // 2. Sertakan Scale awal
         let scaleStr = '';
         if (Array.isArray(anim.scale) && (anim.scale[0] !== 100 || anim.scale[1] !== 100)) {
             scaleStr = ` scale(${anim.scale[0] / 100}, ${anim.scale[1] / 100})`;
         }
 
-        // 3. Sertakan Rotasi (dan Mirror/Flip jika perlu)
         let rotateStr = '';
         if (typeof anim.rotation !== 'undefined') {
             const defaultIsNegative = (defaultDir === 'down' || defaultDir === 'right');
@@ -197,18 +200,17 @@
         const fromTransform = translateStr + scaleStr + rotateStr;
         const toTransform   = `translate(0, 0) scale(1) rotate(0deg)`;
 
-        // 4. Pilih kurva timing (Easing) yang benar agar 'Slide Fade' tidak ikut bounce
-        let easeIn  = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // Default Bounce In
-        let easeOut = 'cubic-bezier(0.6, -0.8, 0.73, 0.04)'; // Default Bounce Out
+        let easeIn  = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; 
+        let easeOut = 'cubic-bezier(0.6, -0.8, 0.73, 0.04)'; 
 
         if (preset.category === 'clean') {
-            easeIn  = 'cubic-bezier(0.16, 1, 0.3, 1)'; // Smooth Clean In
-            easeOut = 'cubic-bezier(0.7, 0, 0.84, 0)'; // Smooth Clean Out
+            easeIn  = 'cubic-bezier(0.16, 1, 0.3, 1)'; 
+            easeOut = 'cubic-bezier(0.7, 0, 0.84, 0)'; 
         } else if (presetId === 'shinobiStrike') {
             easeIn  = 'cubic-bezier(0.1, 1, 0.2, 1)';
             easeOut = 'cubic-bezier(0.7, -0.5, 0.9, 0)';
         } else if (presetId === 'swingingRotate') {
-            easeOut = 'cubic-bezier(0.36, -0.56, 0.66, -0.01)'; // Kurva ayunan sedikit beda
+            easeOut = 'cubic-bezier(0.36, -0.56, 0.66, -0.01)'; 
         }
 
         const animClass  = '.animate-' + presetId + '.dir-' + direction;
@@ -259,7 +261,35 @@
         AG.dom.mainViewTabs.forEach(function (tab) {
             tab.classList.toggle('active', tab.dataset.view === view);
         });
-        if (view === 'graph') AG.resizeCanvas();
+
+        if (view !== 'text' && AG.dom.textVideoPreview) {
+            AG.dom.textVideoPreview.pause();
+        } else if (view === 'text' && AG.state.activeTextSubView === 'effect' && AG.dom.textVideoPreview) {
+            AG.dom.textVideoPreview.play().catch(function(){});
+        }
+        if (view === 'graph') {
+            AG.resizeCanvas();
+            if (typeof AG.draw === 'function') AG.draw();
+        }
+    }
+
+    function setTextSubView(subView) {
+        AG.state.activeTextSubView = subView;
+        AG.dom.textAnimSubView.classList.toggle('hidden', subView !== 'animation');
+        AG.dom.textEffectSubView.classList.toggle('hidden', subView !== 'effect');
+        AG.dom.textSubTabs.forEach(function (tab) {
+            tab.classList.toggle('active', tab.dataset.subView === subView);
+        });
+        
+        if (subView !== 'effect' && AG.dom.textVideoPreview) {
+            AG.dom.textVideoPreview.pause();
+        }
+
+        if (subView === 'animation') {
+            if (AG.state.selectedTextPresetId) selectTextPreset(AG.state.selectedTextPresetId);
+        } else {
+            if (AG.state.selectedTextEffectId) selectTextEffect(AG.state.selectedTextEffectId);
+        }
     }
 
     function setTextAnimMode(mode) {
@@ -271,29 +301,34 @@
 
     function selectTextPreset(presetId) {
         AG.state.selectedTextPresetId = presetId;
-
         const cards = AG.dom.textPresetGrid.querySelectorAll('.preset-card');
         if (cards) {
             cards.forEach(function (card) {
                 card.classList.toggle('active', card.dataset.presetId === presetId);
             });
         }
-
         const preset = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
-
         if (preset && preset.directional) {
             const activeCard = AG.dom.textPresetGrid.querySelector('.preset-card[data-preset-id="' + presetId + '"]');
-            if (activeCard) {
-                attachDirectionPicker(activeCard, presetId);
-            }
+            if (activeCard) attachDirectionPicker(activeCard, presetId);
         } else {
             if (directionPicker && directionPicker.parentElement) {
                 directionPicker.parentElement.removeChild(directionPicker);
             }
         }
-
         const dir = (preset && preset.directional) ? getDirection(presetId, preset.defaultDirection) : null;
         updatePreview(presetId, dir);
+    }
+
+    function selectTextEffect(effectId) {
+        AG.state.selectedTextEffectId = effectId;
+        const cards = AG.dom.textEffectGrid.querySelectorAll('.preset-card');
+        if (cards) {
+            cards.forEach(function (card) {
+                card.classList.toggle('active', card.dataset.effectId === effectId);
+            });
+        }
+        updateEffectPreview(effectId);
     }
 
     function createTextPresetCard(preset) {
@@ -316,7 +351,6 @@
         favBtn.onclick = function(e) { toggleFavorite(preset.id, e); };
 
         topline.className = 'text-preset-topline';
-
         title.className = 'text-preset-title';
         title.textContent = preset.label || preset.name;
         title.style.color = 'var(--text0)';
@@ -366,6 +400,47 @@
         return card;
     }
 
+    function createTextEffectCard(effect) {
+        const card      = document.createElement('div');
+        const topline   = document.createElement('div');
+        const title     = document.createElement('span');
+        const icon      = document.createElement('span');
+        const hint      = document.createElement('span');
+
+        card.className = 'preset-card';
+        card.dataset.effectId = effect.id;
+        if (AG.state.selectedTextEffectId === effect.id) card.classList.add('active');
+
+        topline.className = 'text-preset-topline';
+        title.className = 'text-preset-title';
+        title.textContent = effect.name;
+        title.style.color = 'var(--text0)';
+
+        icon.className = 'text-preset-icon';
+        icon.innerHTML = 'FFX';
+        icon.style.color = 'var(--accent)';
+
+        hint.className = 'text-preset-hint';
+        hint.textContent = effect.hint || 'FFX Effect preset';
+        hint.style.fontSize = '9px';
+        hint.style.color = 'var(--text2)';
+        hint.style.display = 'block';
+        hint.style.marginTop = '4px';
+
+        topline.style.cssText = 'display:flex;justify-content:space-between;';
+        topline.appendChild(title);
+        topline.appendChild(icon);
+
+        card.appendChild(topline);
+        card.appendChild(hint);
+
+        card.addEventListener('click', function () {
+            selectTextEffect(effect.id);
+        });
+
+        return card;
+    }
+
     function renderTextPresetCards() {
         if (directionPicker && directionPicker.parentElement) {
             directionPicker.parentElement.removeChild(directionPicker);
@@ -399,14 +474,37 @@
         }
     }
 
+    function renderTextEffectCards() {
+        AG.dom.textEffectGrid.innerHTML = '';
+        const effects = window.TEXT_EFFECTS || {};
+
+        for (const key in effects) {
+            const effect = effects[key];
+
+            if (currentEffectSearch !== '') {
+                const s = currentEffectSearch.toLowerCase();
+                if (!effect.name.toLowerCase().includes(s) && !(effect.hint || '').toLowerCase().includes(s)) continue;
+            }
+
+            const card = createTextEffectCard(effect);
+            AG.dom.textEffectGrid.appendChild(card);
+        }
+    }
+
     function handleApplyText() {
         const presetId = AG.state.selectedTextPresetId;
         const preset   = window.TEXT_PRESETS && window.TEXT_PRESETS[presetId];
-        const dir      = (preset && preset.directional)
-            ? getDirection(presetId, preset.defaultDirection)
-            : null;
-
+        const dir      = (preset && preset.directional) ? getDirection(presetId, preset.defaultDirection) : null;
         AG.applyTextAnimation(presetId, AG.state.textAnimMode, dir);
+    }
+
+    function handleApplyEffect() {
+        const effectId = AG.state.selectedTextEffectId;
+        if (effectId === 'autoSync') {
+            AG.applyAudioSync(effectId);
+        } else {
+            AG.applyTextEffect(effectId);
+        }
     }
 
     function bindUiEvents() {
@@ -416,6 +514,12 @@
         AG.dom.mainViewTabs.forEach(function (tab) {
             tab.addEventListener('click', function () {
                 setMainView(tab.dataset.view);
+            });
+        });
+
+        AG.dom.textSubTabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                setTextSubView(tab.dataset.subView);
             });
         });
 
@@ -445,6 +549,7 @@
         });
 
         AG.dom.applyTextButton.addEventListener('click', handleApplyText);
+        AG.dom.applyEffectButton.addEventListener('click', handleApplyEffect);
 
         if (AG.dom.clearTextButton) {
             AG.dom.clearTextButton.addEventListener('click', AG.clearTextAnimations);
@@ -487,6 +592,13 @@
             });
         }
 
+        if (AG.dom.effectSearchInput) {
+            AG.dom.effectSearchInput.addEventListener('input', function(e) {
+                currentEffectSearch = e.target.value;
+                renderTextEffectCards();
+            });
+        }
+
         if (AG.dom.textCategoryTabs) {
             AG.dom.textCategoryTabs.forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
@@ -499,15 +611,15 @@
         }
 
         renderTextPresetCards();
+        renderTextEffectCards();
         setTextAnimMode(AG.state.textAnimMode);
         setMainView(AG.state.activeView);
+        setTextSubView(AG.state.activeTextSubView || 'animation');
 
         const initId = AG.state.selectedTextPresetId;
         if (initId) {
             const initPreset = window.TEXT_PRESETS && window.TEXT_PRESETS[initId];
-            const initDir = (initPreset && initPreset.directional)
-                ? getDirection(initId, initPreset.defaultDirection)
-                : null;
+            const initDir = (initPreset && initPreset.directional) ? getDirection(initId, initPreset.defaultDirection) : null;
             updatePreview(initId, initDir);
             if (initPreset && initPreset.directional) {
                 const initCard = AG.dom.textPresetGrid.querySelector('.preset-card[data-preset-id="' + initId + '"]');

@@ -15,11 +15,12 @@
         if (!wrap) return;
 
         const signature = 'ARKAGRAPH-V3';
+        const logoContent = 'ARKA<span>GRAPH</span><span class="ag-pro-badge" style="margin-left:6px;font-size:9px;padding:2px 4px;border-radius:3px;border:1px solid;vertical-align:middle;font-weight:bold;letter-spacing:0.5px;">PRO</span>';
         
         wrap.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <div>
-                    <div id="logo" data-sig="${signature}">ARKA<span>GRAPH</span></div>
+                    <div id="logo" data-sig="${signature}">${logoContent}</div>
                     <div id="version">V3.0.0 // MOTION ARCHITECTURE</div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
@@ -43,7 +44,7 @@
             if (!checkWrap || !checkLogo) {
                 tampered = true;
             } else {
-                if (checkLogo.dataset.sig !== signature || checkLogo.innerHTML !== 'ARKA<span>GRAPH</span>') {
+                if (checkLogo.dataset.sig !== signature || checkLogo.innerHTML !== logoContent) {
                     tampered = true;
                 }
                 const styles = window.getComputedStyle(checkWrap);

@@ -17,7 +17,7 @@
 
 <div id="main-view-tabs">
     <button class="main-view-tab active" type="button" data-view="graph">GRAPH</button>
-    <button class="main-view-tab" type="button" data-view="text">TEXT ANIMATION</button>
+    <button class="main-view-tab" type="button" data-view="text">TEXT</button>
 </div>
 
 <div id="view-graph-container">
@@ -209,49 +209,74 @@
 <div id="view-text-container" class="hidden">
     <div id="text-preview-monitor">
         <div class="monitor-tag" style="z-index: 3;">LIVE PREVIEW</div>
-        
         <div id="text-bg-layer" aria-hidden="true"></div>
         <div id="text-bg-gradient" aria-hidden="true"></div>
-        
         <div id="text-preview-render" style="position: relative; z-index: 2;">
             <span>A</span><span>R</span><span>K</span><span>A</span>
         </div>
+        <video id="text-video-preview" autoplay loop muted playsinline style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2;" class="hidden"></video>
     </div>
 
-    <div class="text-panel-header">
-        <span class="section-label">TEXT_ANIMATION</span>
-        <span class="text-panel-meta">MARKER DRIVEN</span>
+    <div id="text-sub-tabs">
+        <button class="text-sub-tab active" type="button" data-sub-view="animation">ANIMATION</button>
+        <button class="text-sub-tab" type="button" data-sub-view="effect">EFFECT</button>
     </div>
 
-    <div class="text-tools-bar">
-        <input type="text" id="text-search-input" placeholder="Search presets..." autocomplete="off">
-        <div id="text-category-tabs">
-            <button class="cat-btn active" data-cat="all">ALL</button>
-            <button class="cat-btn fav-tab" data-cat="fav">★ FAV</button>
-            <button class="cat-btn" data-cat="clean">CLEAN</button>
-            <button class="cat-btn" data-cat="kinetic">KINETIC</button>
-            <button class="cat-btn" data-cat="amv">AMV</button>
+    <div id="text-anim-sub-view">
+        <div class="text-panel-header">
+            <span class="section-label">TEXT_ANIMATION</span>
+            <span class="text-panel-meta">MARKER DRIVEN</span>
+        </div>
+
+        <div class="text-tools-bar">
+            <input type="text" id="text-search-input" placeholder="Search presets..." autocomplete="off">
+            <div id="text-category-tabs">
+                <button class="cat-btn active" data-cat="all">ALL</button>
+                <button class="cat-btn fav-tab" data-cat="fav">★ FAV</button>
+                <button class="cat-btn" data-cat="clean">CLEAN</button>
+                <button class="cat-btn" data-cat="kinetic">KINETIC</button>
+                <button class="cat-btn" data-cat="amv">AMV</button>
+            </div>
+        </div>
+        <div class="text-mode-row">
+            <span class="param-label">ANIM MODE</span>
+            <div class="seg-ctrl" id="text-anim-mode">
+                <button class="seg-btn" type="button" data-text-mode="in">IN</button>
+                <button class="seg-btn" type="button" data-text-mode="out">OUT</button>
+                <button class="seg-btn active" type="button" data-text-mode="both">IN &amp; OUT</button>
+            </div>
+        </div>
+
+        <div class="text-presets-wrap">
+            <div class="text-presets-header">
+                <span class="section-label">TEXT_PRESETS</span>
+            </div>
+            <div id="text-presets-grid"></div>
+        </div>
+
+        <div id="text-actions">
+            <button class="action-btn" id="btn-apply-text" type="button">APPLY TEXT ANIMATION</button>
+            <button class="action-btn" id="btn-clear-text" type="button" style="margin-top: 6px; background: var(--bg2); color: var(--text1); border: 1px solid var(--border2);">CLEAR TEXT ANIMATION</button>
         </div>
     </div>
-    <div class="text-mode-row">
-        <span class="param-label">ANIM MODE</span>
-        <div class="seg-ctrl" id="text-anim-mode">
-            <button class="seg-btn" type="button" data-text-mode="in">IN</button>
-            <button class="seg-btn" type="button" data-text-mode="out">OUT</button>
-            <button class="seg-btn active" type="button" data-text-mode="both">IN &amp; OUT</button>
-        </div>
-    </div>
 
-    <div class="text-presets-wrap">
-        <div class="text-presets-header">
-            <span class="section-label">TEXT_PRESETS</span>
+    <div id="text-effect-sub-view" class="hidden">
+        <div class="text-panel-header">
+            <span class="section-label">TEXT_EFFECTS</span>
+            <span class="text-panel-meta">FFX PRESETS</span>
         </div>
-        <div id="text-presets-grid"></div>
-    </div>
-
-    <div id="text-actions">
-        <button class="action-btn" id="btn-apply-text" type="button">APPLY TEXT ANIMATION</button>
-        <button class="action-btn" id="btn-clear-text" type="button" style="margin-top: 6px; background: var(--bg2); color: var(--text1); border: 1px solid var(--border2);">CLEAR TEXT ANIMATION</button>
+        <div class="text-tools-bar">
+            <input type="text" id="effect-search-input" placeholder="Search effects..." autocomplete="off">
+        </div>
+        <div class="text-presets-wrap">
+            <div class="text-presets-header">
+                <span class="section-label">EFFECT_PRESETS</span>
+            </div>
+            <div id="text-effects-grid"></div>
+        </div>
+        <div id="effect-actions" style="padding-top: 12px;">
+            <button class="action-btn" id="btn-apply-effect" type="button">APPLY TEXT EFFECT</button>
+        </div>
     </div>
 </div>
 
@@ -366,6 +391,7 @@
 <script src="settings/storage.js"></script>
 <script src="settings/panel.js"></script>
 <script src="presets/text-presets.js"></script>
+<script src="presets/text-effects.js"></script>
 
 <script src="app/config.js"></script>
 <script src="app/dom.js"></script>

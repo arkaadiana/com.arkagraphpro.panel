@@ -11,59 +11,43 @@
         });
     }
 
-    /**
-     * Smart Direction Transformer
-     * Memastikan payload yang dikirim ke After Effects sinkron dengan logic CSS Preview.
-     * Mampu melakukan swap axis untuk preset diagonal (misal X dominant ke Y dominant).
-     */
     function applyDirectionToPayload(payload, direction) {
         if (!direction || !payload.animator) return payload;
 
         const anim = payload.animator;
-        // Hanya proses jika position berbentuk Array
         if (!Array.isArray(anim.position)) return payload;
 
         const [ox, oy, oz] = anim.position;
         const defaultDir = payload.defaultDirection || 'up';
 
-        // 1. Ekstrak Primary & Secondary Magnitude berdasarkan natural axis preset-nya
         let primaryMag = 0;
         let secondaryMag = 0;
         const isDefaultVertical = (defaultDir === 'up' || defaultDir === 'down');
 
         if (isDefaultVertical) {
             primaryMag = Math.abs(oy);
-            secondaryMag = ox; // X adalah secondary / cross-axis
+            secondaryMag = ox; 
         } else {
             primaryMag = Math.abs(ox);
-            secondaryMag = oy; // Y adalah secondary / cross-axis
+            secondaryMag = oy; 
         }
 
-        // Fallback jika tidak sengaja 0
         if (primaryMag === 0) primaryMag = isDefaultVertical ? 85 : 150;
 
-        // 2. Map ke Target Direction
         let newX = 0, newY = 0;
         const isTargetVertical = (direction === 'up' || direction === 'down');
 
         if (isTargetVertical) {
-            // Target sumbu Y (up: masuk dari bawah = +Y, down: masuk dari atas = -Y)
             newY = (direction === 'up') ? primaryMag : -primaryMag;
-            // Cross-axis dipindahkan ke X
             newX = secondaryMag;
         } else {
-            // Target sumbu X (left: masuk dari kanan = +X, right: masuk dari kiri = -X)
             newX = (direction === 'left') ? primaryMag : -primaryMag;
-            // Cross-axis dipindahkan ke Y
             newY = secondaryMag;
         }
 
-        // Deep clone agar tidak merusak original global preset object
         const modified = JSON.parse(JSON.stringify(payload));
         modified.animator.position = [newX, newY, oz];
 
-        // 3. Smart Rotation Flipping
-        // Jika arah berlawanan, invert rotasinya agar rasanya tetap "masuk akal" secara fisik
         const defaultIsNegative = (defaultDir === 'down' || defaultDir === 'right');
         const targetIsNegative = (direction === 'down' || direction === 'right');
         const needsFlip = (defaultIsNegative !== targetIsNegative);
@@ -72,7 +56,6 @@
             modified.animator.rotation = -anim.rotation;
         }
 
-        // Flip untuk rotasi 3D
         if (typeof modified.animator.rotationX !== 'undefined' && isTargetVertical && needsFlip) {
             modified.animator.rotationX = -anim.rotationX;
         }
@@ -133,6 +116,44 @@
         AG.setStatus(ok ? 'TEXT ANIMATION APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
     }
 
+    async function applyTextEffect(effectId) {
+        const effect = window.TEXT_EFFECTS && window.TEXT_EFFECTS[effectId];
+        if (!effect) {
+            AG.setStatus('EFFECT NOT FOUND', 'err');
+            return;
+        }
+        if (!AG.csInterface) {
+            AG.setStatus('PREVIEW MODE', 'ok');
+            return;
+        }
+        AG.setStatus('APPLYING EFFECT...', '');
+        const extensionRoot = AG.csInterface.getSystemPath(SystemPath.EXTENSION);
+        const absoluteFfxPath = extensionRoot + "/src/assets/ffx/" + effect.ffxFile;
+        const result = await evalHostScript('arkaGraphApplyTextEffect', absoluteFfxPath);
+        const ok = result && result.indexOf('OK') === 0;
+        AG.setStatus(ok ? 'EFFECT APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
+    }
+
+    async function applyAudioSync(effectId) {
+        const effect = window.TEXT_EFFECTS && window.TEXT_EFFECTS[effectId];
+        if (!effect) {
+            AG.setStatus('EFFECT NOT FOUND', 'err');
+            return;
+        }
+        if (!AG.csInterface) {
+            AG.setStatus('PREVIEW MODE', 'ok');
+            return;
+        }
+        AG.setStatus('SYNCING AUDIO...', '');
+        const extensionRoot = AG.csInterface.getSystemPath(SystemPath.EXTENSION);
+        const absoluteFfxPath = extensionRoot + "/src/assets/ffx/" + effect.ffxFile;
+        
+        const result = await evalHostScript('arkaGraphApplyAudioSync', absoluteFfxPath);
+        
+        const ok = result && result.indexOf('OK') === 0;
+        AG.setStatus(ok ? 'AUDIO SYNC APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
+    }
+
     async function syncFromAfterEffects() {
         AG.setStatus('READING AE...', '');
         const result = await evalHostScript(AG.hostMethods.syncFromAE);
@@ -172,6 +193,8 @@
     AG.bakeKeys = bakeKeys;
     AG.clearExpression = clearExpression;
     AG.applyTextAnimation = applyTextAnimation;
+    AG.applyTextEffect = applyTextEffect;
+    AG.applyAudioSync = applyAudioSync;
     AG.syncFromAfterEffects = syncFromAfterEffects;
     AG.refreshFps = refreshFps;
     AG.clearTextAnimations = clearTextAnimations;
