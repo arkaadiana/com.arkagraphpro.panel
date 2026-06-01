@@ -6,6 +6,7 @@
         AG.initSecurity();
         
         AG.initSettingsFeatures();
+        AG.initAiManager();
         AG.bindCanvasEvents();
         AG.bindSliderEvents();
         AG.bindUiEvents();

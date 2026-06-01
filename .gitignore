@@ -25,3 +25,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# AI Generated Cache & Engine
+ai-cache/
+ai-engine/

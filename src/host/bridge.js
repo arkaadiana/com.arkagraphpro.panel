@@ -187,6 +187,42 @@
         AG.setStatus(ok ? 'TEXT ANIMATION CLEARED ✓' : 'ERROR', ok ? 'ok' : 'err');
     }
 
+    async function applyReverseFrame() {
+        AG.setStatus('REVERSING LAYER...', '');
+        const result = await evalHostScript(AG.hostMethods.applyReverse);
+        const ok = result && result.indexOf('OK') === 0;
+        AG.setStatus(ok ? 'LAYER REVERSED ✓' : 'ERROR', ok ? 'ok' : 'err');
+    }
+
+    async function applyFreezeFrame() {
+        AG.setStatus('FREEZING FRAME...', '');
+        const result = await evalHostScript(AG.hostMethods.applyFreezeFrame);
+        const ok = result && result.indexOf('OK') === 0;
+        AG.setStatus(ok ? 'FREEZE FRAME APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
+    }
+
+    async function applySpeedRamp() {
+        if (AG.state.timeSpeedRampMode === 'ai') {
+            if (!AG.aiManager || !AG.aiManager.isInstalled()) {
+                AG.setStatus('INSTALL AI PACKAGE FIRST', 'err');
+                return;
+            }
+            if (typeof AG.runAiSpeedRamp === 'function') {
+                await AG.runAiSpeedRamp();
+                return;
+            }
+            AG.setStatus('AI RUNNER UNAVAILABLE', 'err');
+            return;
+        } else {
+            AG.setStatus('APPLYING SPEED RAMP...', '');
+        }
+
+        const options = typeof AG.getTimeRampOptions === 'function' ? AG.getTimeRampOptions() : {};
+        const result = await evalHostScript(AG.hostMethods.applyNativeSpeedRamp, JSON.stringify(options));
+        const ok = result && result.indexOf('OK') === 0;
+        AG.setStatus(ok ? 'SPEED RAMP APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
+    }
+
     AG.evalHostScript = evalHostScript;
     AG.applyDirectionToPayload = applyDirectionToPayload;
     AG.applyToSelected = applyToSelected;
@@ -198,4 +234,7 @@
     AG.syncFromAfterEffects = syncFromAfterEffects;
     AG.refreshFps = refreshFps;
     AG.clearTextAnimations = clearTextAnimations;
+    AG.applyReverseFrame = applyReverseFrame;
+    AG.applyFreezeFrame = applyFreezeFrame;
+    AG.applySpeedRamp = applySpeedRamp;
 })();

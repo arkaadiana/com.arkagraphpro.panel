@@ -9,6 +9,11 @@
         getFPS: 'arkaGraphGetFPS',
         bakeKeys: 'arkaGraphBakeKeys',
         applyTextAnimation: 'arkaGraphApplyTextAnimation',
-        clearTextAnimations: 'arkaGraphClearTextAnimations'
+        clearTextAnimations: 'arkaGraphClearTextAnimations',
+        applyReverse: 'arkaGraphApplyReverse',
+        applyFreezeFrame: 'arkaGraphApplyFreezeFrame',
+        applyNativeSpeedRamp: 'arkaGraphApplyNativeSpeedRamp',
+        prepareAiSpeedRampJob: 'arkaGraphPrepareAISpeedRampJob',
+        importAiSpeedRampResult: 'arkaGraphImportAISpeedRampResult'
     };
 })();

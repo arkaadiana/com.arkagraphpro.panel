@@ -8,6 +8,8 @@
         loop: { enabled: false, infinite: false, inCount: 0, outCount: 0 },
         activeView: 'graph',
         activeTextSubView: 'animation',
+        timeSpeedRampMode: 'native',
+        timeRamp: { shape: 'fastSlowFast', intensity: 80 },
         textAnimMode: 'both',
         selectedTextPresetId: 'slideUpFade',
         selectedTextEffectId: 'elasticTwist',

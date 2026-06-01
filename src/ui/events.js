@@ -258,6 +258,7 @@
         AG.state.activeView = view;
         AG.dom.graphView.classList.toggle('hidden', view !== 'graph');
         AG.dom.textView.classList.toggle('hidden', view !== 'text');
+        AG.dom.timeView.classList.toggle('hidden', view !== 'time');
         AG.dom.mainViewTabs.forEach(function (tab) {
             tab.classList.toggle('active', tab.dataset.view === view);
         });
@@ -270,6 +271,9 @@
         if (view === 'graph') {
             AG.resizeCanvas();
             if (typeof AG.draw === 'function') AG.draw();
+        }
+        if (view === 'time' && AG.aiManager) {
+            AG.aiManager.refresh();
         }
     }
 
@@ -297,6 +301,65 @@
         AG.dom.textAnimModeButtons.forEach(function (button) {
             button.classList.toggle('active', button.dataset.textMode === mode);
         });
+    }
+
+    function setTimeSpeedRampMode(mode) {
+        const wantsAi = mode === 'ai';
+        const aiReady = AG.aiManager && AG.aiManager.isInstalled();
+        AG.state.timeSpeedRampMode = wantsAi && aiReady ? 'ai' : 'native';
+
+        if (AG.dom.timeNativeMode) {
+            AG.dom.timeNativeMode.checked = AG.state.timeSpeedRampMode === 'native';
+        }
+        if (AG.dom.timeAiMode) {
+            AG.dom.timeAiMode.checked = AG.state.timeSpeedRampMode === 'ai';
+            AG.dom.timeAiMode.disabled = !aiReady;
+        }
+        if (AG.dom.timeModeOptions) {
+            AG.dom.timeModeOptions.forEach(function (option) {
+                const input = option.querySelector('input');
+                const isActive = input && input.value === AG.state.timeSpeedRampMode;
+                option.classList.toggle('active', !!isActive);
+                option.classList.toggle('disabled', !!(input && input.disabled));
+            });
+        }
+    }
+
+    function getRampShapeLabel(shape) {
+        if (shape === 'fastSlow') return 'FAST TO SLOW';
+        if (shape === 'slowFast') return 'SLOW TO FAST';
+        if (shape === 'constant') return 'CONSTANT SPEED';
+        return 'FAST SLOW FAST';
+    }
+
+    function syncTimeRampControls() {
+        const ramp = AG.state.timeRamp || { shape: 'fastSlowFast', intensity: 80 };
+        if (AG.dom.timeRampShapeButtons) {
+            AG.dom.timeRampShapeButtons.forEach(function (button) {
+                button.classList.toggle('active', button.dataset.rampShape === ramp.shape);
+            });
+        }
+        if (AG.dom.timeRampIntensity) AG.dom.timeRampIntensity.value = ramp.intensity;
+        if (AG.dom.timeRampIntensityVal) AG.dom.timeRampIntensityVal.textContent = ramp.intensity + '%';
+        if (AG.dom.timeRampSummary) AG.dom.timeRampSummary.textContent = getRampShapeLabel(ramp.shape);
+    }
+
+    function setTimeRampShape(shape) {
+        AG.state.timeRamp.shape = shape || 'fastSlowFast';
+        syncTimeRampControls();
+    }
+
+    function syncTimeRampSliders() {
+        AG.state.timeRamp.intensity = Math.max(10, Math.min(100, parseInt(AG.dom.timeRampIntensity.value, 10) || 80));
+        syncTimeRampControls();
+    }
+
+    function getTimeRampOptions() {
+        const ramp = AG.state.timeRamp || {};
+        return {
+            shape: ramp.shape || 'fastSlowFast',
+            intensity: Math.max(10, Math.min(100, parseInt(ramp.intensity, 10) || 80))
+        };
     }
 
     function selectTextPreset(presetId) {
@@ -551,6 +614,38 @@
         AG.dom.applyTextButton.addEventListener('click', handleApplyText);
         AG.dom.applyEffectButton.addEventListener('click', handleApplyEffect);
 
+        AG.dom.reverseFrameButton.addEventListener('click', AG.applyReverseFrame);
+        AG.dom.freezeFrameButton.addEventListener('click', AG.applyFreezeFrame);
+        AG.dom.speedRampButton.addEventListener('click', AG.applySpeedRamp);
+
+        if (AG.dom.timeNativeMode) {
+            AG.dom.timeNativeMode.addEventListener('change', function () {
+                setTimeSpeedRampMode('native');
+            });
+        }
+        if (AG.dom.timeAiMode) {
+            AG.dom.timeAiMode.addEventListener('change', function () {
+                setTimeSpeedRampMode('ai');
+            });
+        }
+        if (AG.dom.downloadAiPackageButton) {
+            AG.dom.downloadAiPackageButton.addEventListener('click', AG.downloadAiPackage);
+        }
+        if (AG.dom.removeAiPackageButton) {
+            AG.dom.removeAiPackageButton.addEventListener('click', AG.removeAiPackage);
+        }
+        if (AG.dom.timeRampShapeButtons) {
+            AG.dom.timeRampShapeButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setTimeRampShape(button.dataset.rampShape);
+                });
+            });
+        }
+        if (AG.dom.timeRampIntensity) {
+            AG.dom.timeRampIntensity.addEventListener('input', syncTimeRampSliders);
+            AG.dom.timeRampIntensity.addEventListener('change', syncTimeRampSliders);
+        }
+
         if (AG.dom.clearTextButton) {
             AG.dom.clearTextButton.addEventListener('click', AG.clearTextAnimations);
         }
@@ -613,6 +708,8 @@
         renderTextPresetCards();
         renderTextEffectCards();
         setTextAnimMode(AG.state.textAnimMode);
+        setTimeSpeedRampMode(AG.state.timeSpeedRampMode);
+        syncTimeRampControls();
         setMainView(AG.state.activeView);
         setTextSubView(AG.state.activeTextSubView || 'animation');
 
@@ -647,5 +744,7 @@
         }
     }
 
+    AG.setTimeSpeedRampMode = setTimeSpeedRampMode;
+    AG.getTimeRampOptions = getTimeRampOptions;
     AG.bindUiEvents = bindUiEvents;
 })();

@@ -18,6 +18,7 @@
 <div id="main-view-tabs">
     <button class="main-view-tab active" type="button" data-view="graph">GRAPH</button>
     <button class="main-view-tab" type="button" data-view="text">TEXT</button>
+    <button class="main-view-tab" type="button" data-view="time">TIME</button>
 </div>
 
 <div id="view-graph-container">
@@ -280,6 +281,71 @@
     </div>
 </div>
 
+<div id="view-time-container" class="hidden">
+    <div class="time-panel-header">
+        <span class="section-label">TIME_OPERATIONS</span>
+        <span class="time-panel-meta">LAYER TOOLS</span>
+    </div>
+
+    <div class="time-actions-grid">
+        <button class="action-btn time-action-btn" id="btn-reverse-frame" type="button">REVERSE FRAME</button>
+        <button class="action-btn time-action-btn" id="btn-freeze-frame" type="button">FREEZE FRAME</button>
+        <button class="action-btn time-action-btn accent" id="btn-speed-ramp" type="button">SPEED RAMP</button>
+    </div>
+
+    <div class="time-section">
+        <div class="time-section-header">
+            <span class="section-label">SPEED_RAMP_MODE</span>
+        </div>
+        <div class="time-mode-toggle" id="time-speed-ramp-mode">
+            <label class="time-mode-option">
+                <input id="time-mode-native" type="radio" name="time-speed-ramp-mode" value="native" checked/>
+                <span>NATIVE MODE</span>
+            </label>
+            <label class="time-mode-option">
+                <input id="time-mode-ai" type="radio" name="time-speed-ramp-mode" value="ai"/>
+                <span>AI MODE</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="time-section">
+        <div class="time-section-header">
+            <span class="section-label">RETIME_SHAPE</span>
+            <span id="time-ramp-summary" class="time-panel-meta">FAST SLOW FAST</span>
+        </div>
+        <div class="time-shape-grid" id="time-ramp-shape">
+            <button class="time-shape-btn active" type="button" data-ramp-shape="fastSlowFast">FAST<br/>SLOW<br/>FAST</button>
+            <button class="time-shape-btn" type="button" data-ramp-shape="fastSlow">FAST<br/>TO<br/>SLOW</button>
+            <button class="time-shape-btn" type="button" data-ramp-shape="slowFast">SLOW<br/>TO<br/>FAST</button>
+            <button class="time-shape-btn" type="button" data-ramp-shape="constant">CONSTANT<br/>SPEED</button>
+        </div>
+        <div class="time-control-row">
+            <span class="param-label">INTENSITY</span>
+            <input type="range" class="param-slider" id="time-ramp-intensity" min="10" max="100" step="5" value="80"/>
+            <span class="param-val" id="time-ramp-intensity-val">80%</span>
+        </div>
+    </div>
+
+    <div class="time-section">
+        <div class="time-section-header">
+            <span class="section-label">AI_PACKAGE_MANAGER</span>
+            <span id="ai-package-state" class="time-package-state">NOT INSTALLED</span>
+        </div>
+        <textarea id="ai-package-path" class="time-package-path" rows="3" readonly></textarea>
+        <div id="ai-package-progress" class="time-package-progress hidden" aria-hidden="true">
+            <div class="time-package-progress-track">
+                <div id="ai-package-progress-fill" class="time-package-progress-fill"></div>
+            </div>
+            <div id="ai-package-progress-label" class="time-package-progress-label">READY</div>
+        </div>
+        <div class="time-package-actions">
+            <button class="action-btn time-package-btn accent" id="btn-download-ai-package" type="button">DOWNLOAD AI PACKAGE</button>
+            <button class="action-btn time-package-btn danger hidden" id="btn-remove-ai-package" type="button">REMOVE AI PACKAGE</button>
+        </div>
+    </div>
+</div>
+
 <div id="statusbar">
     <span id="status-msg">READY</span>
     <span id="status-fps">— FPS</span>
@@ -413,6 +479,7 @@
 <script src="host/bridge.js"></script>
 <script src="features/settings.js"></script>
 <script src="features/preset.js"></script>
+<script src="features/ai-manager.js"></script>
 <script src="ui/events.js"></script>
 <script src="main.js"></script>
 </body>
