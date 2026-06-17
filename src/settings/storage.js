@@ -1,8 +1,7 @@
 (function (root) {
     'use strict';
 
-    const STORAGE_KEY = 'arkaGraph.settings.v1';
-    const BACKGROUND_KEY = 'arkaGraph.settings.background.v1';
+    const storage = root.ArkaGraphStorageHelper;
     let lastBackgroundPayload = null;
     const DEFAULTS = {
         features: {
@@ -119,15 +118,15 @@
         defaults: clone(DEFAULTS),
         load: function () {
             try {
-                const raw = root.localStorage.getItem(STORAGE_KEY);
-                const rawBackground = root.localStorage.getItem(BACKGROUND_KEY);
-                lastBackgroundPayload = rawBackground || '';
-                if (!raw) {
-                    return rawBackground ? mergeSettings(DEFAULTS, { background: JSON.parse(rawBackground) }) : clone(DEFAULTS);
+                const storedSettings = storage.read(['settings', 'core'], null);
+                const storedBackground = storage.read(['settings', 'background'], null);
+                lastBackgroundPayload = storedBackground ? JSON.stringify(storedBackground) : '';
+                if (!storedSettings) {
+                    return storedBackground ? mergeSettings(DEFAULTS, { background: storedBackground }) : clone(DEFAULTS);
                 }
-                const settings = mergeSettings(DEFAULTS, JSON.parse(raw));
-                if (rawBackground) {
-                    return mergeSettings(settings, { background: JSON.parse(rawBackground) });
+                const settings = mergeSettings(DEFAULTS, storedSettings);
+                if (storedBackground) {
+                    return mergeSettings(settings, { background: storedBackground });
                 }
                 return settings;
             } catch (error) {
@@ -137,18 +136,21 @@
         save: function (settings) {
             try {
                 const merged = mergeSettings(DEFAULTS, settings);
-                root.localStorage.setItem(STORAGE_KEY, JSON.stringify(withoutBackgroundPayload(merged)));
+                const savedCore = storage.write(['settings', 'core'], withoutBackgroundPayload(merged));
                 const hasBackgroundPayload = !!(merged.background.dataUrl || merged.background.gallery.length);
                 const backgroundPayload = hasBackgroundPayload ? JSON.stringify(merged.background) : '';
+                let savedBackground = true;
                 if (backgroundPayload !== lastBackgroundPayload) {
                     if (backgroundPayload) {
-                        root.localStorage.setItem(BACKGROUND_KEY, backgroundPayload);
+                        savedBackground = storage.write(['settings', 'background'], merged.background);
                     } else {
-                        root.localStorage.removeItem(BACKGROUND_KEY);
+                        savedBackground = storage.remove(['settings', 'background']);
                     }
-                    lastBackgroundPayload = backgroundPayload;
+                    if (savedBackground) {
+                        lastBackgroundPayload = backgroundPayload;
+                    }
                 }
-                return true;
+                return savedCore && savedBackground;
             } catch (error) {
                 return false;
             }

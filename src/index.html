@@ -56,89 +56,137 @@
                 <div class="seg-btn" data-bmode="speed">SPEED</div>
             </div>
         </div>
-        <div class="param-row">
-            <span class="param-label">CTRL P1.X</span>
-            <input type="range" class="param-slider" id="bz-x1" min="0" max="1" step="0.01" value="0.42"/>
-            <span class="param-val" id="bz-x1-val">0.42</span>
+        <div class="param-toggle" style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px; padding: 4px 0;">
+            <span class="toggle-text" style="font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #888;">HIDE CONTROL</span>
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.2s ease; transform: rotate(90deg); color: #888;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
         </div>
-        <div class="param-row">
-            <span class="param-label">CTRL P1.Y</span>
-            <input type="range" class="param-slider" id="bz-y1" min="-0.5" max="1.5" step="0.01" value="0.00"/>
-            <span class="param-val" id="bz-y1-val">0.00</span>
-        </div>
-        <div class="param-row">
-            <span class="param-label">CTRL P2.X</span>
-            <input type="range" class="param-slider" id="bz-x2" min="0" max="1" step="0.01" value="0.58"/>
-            <span class="param-val" id="bz-x2-val">0.58</span>
-        </div>
-        <div class="param-row">
-            <span class="param-label">CTRL P2.Y</span>
-            <input type="range" class="param-slider" id="bz-y2" min="-0.5" max="1.5" step="0.01" value="1.00"/>
-            <span class="param-val" id="bz-y2-val">1.00</span>
+        <div class="param-content" style="display: flex; flex-direction: column;">
+            <div class="param-row">
+                <span class="param-label">CTRL P1.X</span>
+                <input type="range" class="param-slider" id="bz-x1" min="0" max="1" step="0.01" value="0.42"/>
+                <span class="param-val" id="bz-x1-val">0.42</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">CTRL P1.Y</span>
+                <input type="range" class="param-slider" id="bz-y1" min="-0.5" max="1.5" step="0.01" value="0.00"/>
+                <span class="param-val" id="bz-y1-val">0.00</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">CTRL P2.X</span>
+                <input type="range" class="param-slider" id="bz-x2" min="0" max="1" step="0.01" value="0.58"/>
+                <span class="param-val" id="bz-x2-val">0.58</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">CTRL P2.Y</span>
+                <input type="range" class="param-slider" id="bz-y2" min="-0.5" max="1.5" step="0.01" value="1.00"/>
+                <span class="param-val" id="bz-y2-val">1.00</span>
+            </div>
         </div>
     </div>
 
     <div class="engine-params" id="params-elastic">
-        <div class="param-row">
-            <span class="param-label">AMPLITUDE</span>
-            <input type="range" class="param-slider" id="el-amp" min="1.0" max="3.0" step="0.05" value="1.2"/>
-            <span class="param-val" id="el-amp-val">1.20</span>
+        <div class="param-toggle" style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px; padding: 4px 0;">
+            <span class="toggle-text" style="font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #888;">HIDE CONTROL</span>
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.2s ease; transform: rotate(90deg); color: #888;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
         </div>
-        <div class="param-row">
-            <span class="param-label">FREQUENCY</span>
-            <input type="range" class="param-slider" id="el-freq" min="1" max="10" step="0.1" value="4.0"/>
-            <span class="param-val" id="el-freq-val">4.0</span>
-        </div>
-        <div class="param-row">
-            <span class="param-label">DECAY</span>
-            <input type="range" class="param-slider" id="el-decay" min="1" max="15" step="0.1" value="6.0"/>
-            <span class="param-val" id="el-decay-val">6.0</span>
+        <div class="param-content" style="display: flex; flex-direction: column;">
+            <div class="param-row">
+                <span class="param-label">AMPLITUDE</span>
+                <input type="range" class="param-slider" id="el-amp" min="1.0" max="3.0" step="0.05" value="1.2"/>
+                <span class="param-val" id="el-amp-val">1.20</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">FREQUENCY</span>
+                <input type="range" class="param-slider" id="el-freq" min="1" max="10" step="0.1" value="4.0"/>
+                <span class="param-val" id="el-freq-val">4.0</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">DECAY</span>
+                <input type="range" class="param-slider" id="el-decay" min="1" max="15" step="0.1" value="6.0"/>
+                <span class="param-val" id="el-decay-val">6.0</span>
+            </div>
         </div>
     </div>
 
     <div class="engine-params" id="params-bounce">
-        <div class="param-row">
-            <span class="param-label">BOUNCES</span>
-            <input type="range" class="param-slider" id="bn-count" min="1" max="8" step="1" value="3"/>
-            <span class="param-val" id="bn-count-val">3</span>
+        <div class="param-toggle" style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px; padding: 4px 0;">
+            <span class="toggle-text" style="font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #888;">HIDE CONTROL</span>
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.2s ease; transform: rotate(90deg); color: #888;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
         </div>
-        <div class="param-row">
-            <span class="param-label">RESTITUTION</span>
-            <input type="range" class="param-slider" id="bn-rest" min="0.1" max="0.95" step="0.01" value="0.5"/>
-            <span class="param-val" id="bn-rest-val">0.50</span>
+        <div class="param-content" style="display: flex; flex-direction: column;">
+            <div class="param-row">
+                <span class="param-label">BOUNCES</span>
+                <input type="range" class="param-slider" id="bn-count" min="1" max="8" step="1" value="3"/>
+                <span class="param-val" id="bn-count-val">3</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">RESTITUTION</span>
+                <input type="range" class="param-slider" id="bn-rest" min="0.1" max="0.95" step="0.01" value="0.5"/>
+                <span class="param-val" id="bn-rest-val">0.50</span>
+            </div>
         </div>
     </div>
 
     <div class="engine-params" id="params-steps">
-        <div class="param-row">
-            <span class="param-label">COUNT</span>
-            <input type="range" class="param-slider" id="st-count" min="1" max="32" step="1" value="8"/>
-            <span class="param-val" id="st-count-val">8</span>
+        <div class="param-toggle" style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px; padding: 4px 0;">
+            <span class="toggle-text" style="font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #888;">HIDE CONTROL</span>
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.2s ease; transform: rotate(90deg); color: #888;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+        </div>
+        <div class="param-content" style="display: flex; flex-direction: column;">
+            <div class="param-row">
+                <span class="param-label">COUNT</span>
+                <input type="range" class="param-slider" id="st-count" min="1" max="32" step="1" value="8"/>
+                <span class="param-val" id="st-count-val">8</span>
+            </div>
         </div>
     </div>
 
     <div class="engine-params" id="params-wave">
-        <div class="param-row">
-            <span class="param-label">AMPLITUDE</span>
-            <input type="range" class="param-slider" id="wv-amp" min="0.1" max="3.0" step="0.05" value="1.0"/>
-            <span class="param-val" id="wv-amp-val">1.00</span>
+        <div class="param-toggle" style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px; padding: 4px 0;">
+            <span class="toggle-text" style="font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #888;">HIDE CONTROL</span>
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.2s ease; transform: rotate(90deg); color: #888;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
         </div>
-        <div class="param-row">
-            <span class="param-label">FREQUENCY</span>
-            <input type="range" class="param-slider" id="wv-freq" min="0.5" max="20" step="0.1" value="3.0"/>
-            <span class="param-val" id="wv-freq-val">3.0</span>
-        </div>
-        <div class="param-row">
-            <span class="param-label">PHASE</span>
-            <input type="range" class="param-slider" id="wv-phase" min="0" max="1" step="0.01" value="0.0"/>
-            <span class="param-val" id="wv-phase-val">0.00</span>
+        <div class="param-content" style="display: flex; flex-direction: column;">
+            <div class="param-row">
+                <span class="param-label">AMPLITUDE</span>
+                <input type="range" class="param-slider" id="wv-amp" min="0.1" max="3.0" step="0.05" value="1.0"/>
+                <span class="param-val" id="wv-amp-val">1.00</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">FREQUENCY</span>
+                <input type="range" class="param-slider" id="wv-freq" min="0.5" max="20" step="0.1" value="3.0"/>
+                <span class="param-val" id="wv-freq-val">3.0</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">PHASE</span>
+                <input type="range" class="param-slider" id="wv-phase" min="0" max="1" step="0.01" value="0.0"/>
+                <span class="param-val" id="wv-phase-val">0.00</span>
+            </div>
         </div>
     </div>
 
     <div class="engine-params" id="params-custom">
-        <div class="param-row custom-anchor-row">
-            <span class="param-label">NODES</span>
-            <span class="param-val custom-anchor-count" id="custom-anchor-count">5</span>
+        <div class="param-toggle" style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px; padding: 4px 0;">
+            <span class="toggle-text" style="font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #888;">HIDE CONTROL</span>
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.2s ease; transform: rotate(90deg); color: #888;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+        </div>
+        <div class="param-content" style="display: flex; flex-direction: column;">
+            <div class="param-row custom-anchor-row">
+                <span class="param-label">NODES</span>
+                <span class="param-val custom-anchor-count" id="custom-anchor-count">5</span>
+            </div>
         </div>
     </div>
 </div>
@@ -374,6 +422,7 @@
 </div>
 
 <script src="CSInterface.js"></script>
+<script src="storageHelper.js"></script>
 <script src="engines/core.js"></script>
 <script src="engines/bezier.js"></script>
 <script src="engines/elastic.js"></script>
@@ -415,5 +464,25 @@
 <script src="features/preset.js"></script>
 <script src="ui/events.js"></script>
 <script src="main.js"></script>
+
+<script>
+document.querySelectorAll('.param-toggle').forEach(function(toggle) {
+    toggle.addEventListener('click', function() {
+        const content = this.nextElementSibling;
+        const icon = this.querySelector('.toggle-icon');
+        const text = this.querySelector('.toggle-text');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'flex';
+            icon.style.transform = 'rotate(90deg)';
+            text.textContent = 'HIDE CONTROL';
+        } else {
+            content.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
+            text.textContent = 'SHOW CONTROL';
+        }
+    });
+});
+</script>
 </body>
 </html>

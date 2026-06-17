@@ -5,17 +5,9 @@
     let currentTextCategory = 'all';
     let currentTextSearch = '';
     let currentEffectSearch = '';
-    let textFavorites = [];
-
-    try {
-        textFavorites = JSON.parse(localStorage.getItem('AG_TextFavs') || '[]');
-    } catch(e) {}
-
-    let directionState = {};
-
-    try {
-        directionState = JSON.parse(localStorage.getItem('AG_TextDirs') || '{}');
-    } catch(e) {}
+    const storage = window.ArkaGraphStorageHelper;
+    let textFavorites = storage.read(['text', 'favorites'], []);
+    let directionState = storage.read(['text', 'directions'], {});
 
     function getDirection(presetId, defaultDir) {
         return directionState[presetId] || defaultDir || 'up';
@@ -23,9 +15,7 @@
 
     function setDirection(presetId, dir) {
         directionState[presetId] = dir;
-        try {
-            localStorage.setItem('AG_TextDirs', JSON.stringify(directionState));
-        } catch(e) {}
+        storage.write(['text', 'directions'], directionState);
     }
 
     let directionPicker = null;
@@ -250,7 +240,7 @@
         } else {
             textFavorites.push(presetId);
         }
-        localStorage.setItem('AG_TextFavs', JSON.stringify(textFavorites));
+        storage.write(['text', 'favorites'], textFavorites);
         renderTextPresetCards();
     }
 

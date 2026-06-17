@@ -31,8 +31,13 @@
     }
 
     function resetCurrentEngine() {
+        const currentBezierMode = AG.state.engine === 'bezier' && AG.state.params.bezier
+            ? AG.state.params.bezier.mode
+            : null;
         AG.state.params[AG.state.engine] = AG.clone(window.ArkaGraphEngine.get(AG.state.engine).defaults);
-        if (AG.state.engine === 'bezier' && !AG.state.params.bezier.mode) AG.state.params.bezier.mode = 'value';
+        if (AG.state.engine === 'bezier') {
+            AG.state.params.bezier.mode = currentBezierMode || AG.state.params.bezier.mode || 'value';
+        }
         AG.scaleY = 1.0;
         AG.syncCurrentInputs();
         AG.state.referenceCurve = null;
