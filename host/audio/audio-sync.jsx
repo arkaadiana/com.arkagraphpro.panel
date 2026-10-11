@@ -4,7 +4,6 @@ function arkaGraphApplyAudioSync(absoluteFfxPath) {
     try {
         var comp = app.project.activeItem;
         var selectedLayers;
-        var sortedLayers;
         var targetLayer;
         var audioLayer;
         var ffxFile;
@@ -17,29 +16,72 @@ function arkaGraphApplyAudioSync(absoluteFfxPath) {
         if (!comp) return "ERROR: No active composition.";
 
         selectedLayers = comp.selectedLayers;
-        if (selectedLayers.length !== 2) {
-            return "ERROR: Please select exactly 2 layers (1 Visual Target and 1 Audio Reference).";
+        if (!selectedLayers || selectedLayers.length === 0) {
+            return "ERROR: Please select a layer.";
         }
 
-        sortedLayers = [selectedLayers[0], selectedLayers[1]];
-        sortedLayers.sort(function (a, b) {
-            return a.index - b.index;
-        });
+        if (selectedLayers.length === 2) {
+            var layerA = selectedLayers[0];
+            var layerB = selectedLayers[1];
 
-        targetLayer = sortedLayers[0];
-        audioLayer = sortedLayers[1];
-
-        if (!audioLayer.hasAudio) {
-            return "ERROR: The bottom layer does not have an Audio component.";
+            if (layerA.hasAudio && !layerB.hasAudio) {
+                audioLayer = layerA;
+                targetLayer = layerB;
+            } else if (layerB.hasAudio && !layerA.hasAudio) {
+                audioLayer = layerB;
+                targetLayer = layerA;
+            } else if (layerA.hasAudio && layerB.hasAudio) {
+                if (layerA.index < layerB.index) {
+                    targetLayer = layerA;
+                    audioLayer = layerB;
+                } else {
+                    targetLayer = layerB;
+                    audioLayer = layerA;
+                }
+            } else {
+                return "ERROR: None of selected layers have Audio.";
+            }
+        } else if (selectedLayers.length === 1) {
+            targetLayer = selectedLayers[0];
+            var candidateAudio = [];
+            for (layerIndex = 1; layerIndex <= comp.numLayers; layerIndex++) {
+                var l = comp.layer(layerIndex);
+                if (l !== targetLayer && l.hasAudio && l.audioEnabled) {
+                    candidateAudio.push(l);
+                }
+            }
+            if (candidateAudio.length === 1) {
+                audioLayer = candidateAudio[0];
+            } else if (candidateAudio.length > 1) {
+                return "ERROR: Select 2 layers (Target + Audio).";
+            } else {
+                return "ERROR: No audio layer found in composition.";
+            }
+        } else {
+            return "ERROR: Select max 2 layers (Target + Audio).";
         }
 
         ffxFile = File(absoluteFfxPath);
+        if (!ffxFile.exists) {
+            var altDist = absoluteFfxPath.replace("/src/assets/", "/dist/assets/");
+            if (File(altDist).exists) {
+                ffxFile = File(altDist);
+            } else {
+                var altAssets = absoluteFfxPath.replace("/src/assets/", "/assets/");
+                if (File(altAssets).exists) {
+                    ffxFile = File(altAssets);
+                }
+            }
+        }
         if (!ffxFile.exists) return "ERROR: FFX preset file not found.";
 
         app.beginUndoGroup("ArkaGraph: Apply Audio Sync");
         undoStarted = true;
 
         cleanAudioName = audioLayer.name.substring(0, 20).replace(/[^a-zA-Z0-9 ]/g, "");
+        if (!cleanAudioName || cleanAudioName.replace(/\s/g, "") === "") {
+            cleanAudioName = "Layer" + audioLayer.index;
+        }
         uniqueAmpName = "AG_Amp_" + cleanAudioName;
         ampLayerExists = false;
 
@@ -51,13 +93,18 @@ function arkaGraphApplyAudioSync(absoluteFfxPath) {
         }
 
         if (!ampLayerExists) {
-            targetLayer.selected = false;
+            for (layerIndex = 1; layerIndex <= comp.numLayers; layerIndex++) {
+                comp.layer(layerIndex).selected = false;
+            }
             audioLayer.selected = true;
 
-            app.executeCommand(app.findMenuCommandId("Convert Audio to Keyframes"));
+            var cmdId = app.findMenuCommandId("Convert Audio to Keyframes");
+            if (cmdId !== 0) {
+                app.executeCommand(cmdId);
+            }
 
             newAmpLayer = comp.layer(1);
-            if (newAmpLayer && newAmpLayer.name === "Audio Amplitude") {
+            if (newAmpLayer && (newAmpLayer.name === "Audio Amplitude" || newAmpLayer.name.indexOf("Audio Amplitude") !== -1)) {
                 newAmpLayer.name = uniqueAmpName;
                 newAmpLayer.moveToEnd();
                 newAmpLayer.enabled = false;
@@ -96,6 +143,7 @@ function arkaGraphUpdateAudioExpressions(propGroup, uniqueAmpName) {
                 newExpression = prop.expression.replace(/"Audio Amplitude"/g, "\"" + uniqueAmpName + "\"");
                 newExpression = newExpression.replace(/'Audio Amplitude'/g, "'" + uniqueAmpName + "'");
                 prop.expression = newExpression;
+                prop.expressionEnabled = true;
             }
         }
     }

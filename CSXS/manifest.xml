@@ -20,7 +20,7 @@
         <Extension Id="com.arkagraph.panel">
             <DispatchInfo>
                 <Resources>
-                    <MainPath>./src/index.html</MainPath>
+                    <MainPath>./dist/index.html</MainPath>
                     <ScriptPath>./host/index.jsx</ScriptPath>
                     <CEFCommandLine>
                         <Parameter>--enable-nodejs</Parameter>

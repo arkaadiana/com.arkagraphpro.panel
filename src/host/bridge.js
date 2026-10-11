@@ -131,7 +131,14 @@
         const absoluteFfxPath = extensionRoot + "/src/assets/ffx/" + effect.ffxFile;
         const result = await evalHostScript('arkaGraphApplyTextEffect', absoluteFfxPath);
         const ok = result && result.indexOf('OK') === 0;
-        AG.setStatus(ok ? 'EFFECT APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
+        if (ok) {
+            AG.setStatus('EFFECT APPLIED ✓', 'ok');
+        } else {
+            const msg = (result && result.indexOf('ERROR: ') === 0)
+                ? result.replace('ERROR: ', '')
+                : (result || 'ERROR');
+            AG.setStatus(msg.substring(0, 32).toUpperCase(), 'err');
+        }
     }
 
     async function applyAudioSync(effectId) {
@@ -151,7 +158,14 @@
         const result = await evalHostScript('arkaGraphApplyAudioSync', absoluteFfxPath);
         
         const ok = result && result.indexOf('OK') === 0;
-        AG.setStatus(ok ? 'AUDIO SYNC APPLIED ✓' : 'ERROR', ok ? 'ok' : 'err');
+        if (ok) {
+            AG.setStatus('AUDIO SYNC APPLIED ✓', 'ok');
+        } else {
+            const msg = (result && result.indexOf('ERROR: ') === 0)
+                ? result.replace('ERROR: ', '')
+                : (result || 'ERROR');
+            AG.setStatus(msg.substring(0, 32).toUpperCase(), 'err');
+        }
     }
 
     async function syncFromAfterEffects() {

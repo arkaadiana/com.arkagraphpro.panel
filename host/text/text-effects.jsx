@@ -12,6 +12,17 @@ function arkaGraphApplyTextEffect(absoluteFfxPath) {
         if (!layer) return "ERROR: Please select a layer.";
 
         ffxFile = File(absoluteFfxPath);
+        if (!ffxFile.exists) {
+            var altDist = absoluteFfxPath.replace("/src/assets/", "/dist/assets/");
+            if (File(altDist).exists) {
+                ffxFile = File(altDist);
+            } else {
+                var altAssets = absoluteFfxPath.replace("/src/assets/", "/assets/");
+                if (File(altAssets).exists) {
+                    ffxFile = File(altAssets);
+                }
+            }
+        }
         if (!ffxFile.exists) return "ERROR: Preset file does not exist at path: " + absoluteFfxPath;
 
         app.beginUndoGroup("ArkaGraph: Apply FFX Effect");
